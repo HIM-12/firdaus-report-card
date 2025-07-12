@@ -1,1 +1,106 @@
-{}
+{
+  "smd0kqakz64bk9": {
+    "name": "yudsbh",
+    "class": "Unknown",
+    "session": "",
+    "term": "",
+    "position": "",
+    "gender": "",
+    "scores": [
+      {
+        "subject": "azkar",
+        "examScore": 0,
+        "classScore": "12",
+        "totalScore": "3.6"
+      },
+      {
+        "subject": "quran",
+        "examScore": "227",
+        "classScore": 0,
+        "totalScore": "158.9"
+      },
+      {
+        "subject": "hadith",
+        "examScore": 0,
+        "classScore": 0,
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "alphabet",
+        "examScore": 0,
+        "classScore": 0,
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "arabic",
+        "examScore": 0,
+        "classScore": 0,
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "dictation",
+        "examScore": 0,
+        "classScore": 0,
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "writing",
+        "examScore": 0,
+        "classScore": 0,
+        "totalScore": "0.0"
+      }
+    ]
+  },
+  "smd0l9viw72fhe": {
+    "name": "yudsbh",
+    "class": "Unknown",
+    "session": "",
+    "term": "",
+    "position": "",
+    "gender": "",
+    "scores": [
+      {
+        "subject": "azkar",
+        "examScore": "0",
+        "classScore": "12",
+        "totalScore": "3.6"
+      },
+      {
+        "subject": "quran",
+        "examScore": "227",
+        "classScore": "0",
+        "totalScore": "158.9"
+      },
+      {
+        "subject": "hadith",
+        "examScore": "0",
+        "classScore": "0",
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "alphabet",
+        "examScore": "0",
+        "classScore": "0",
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "arabic",
+        "examScore": "0",
+        "classScore": "0",
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "dictation",
+        "examScore": "0",
+        "classScore": "0",
+        "totalScore": "0.0"
+      },
+      {
+        "subject": "writing",
+        "examScore": "0",
+        "classScore": "0",
+        "totalScore": "0.0"
+      }
+    ]
+  }
+}

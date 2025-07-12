@@ -95,7 +95,7 @@
 
         .subjects-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr; /* Adjusted for seven subjects with remarks */
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
             gap: 10px;
             margin-bottom: 15px;
         }
@@ -175,7 +175,28 @@
         .student-item {
             padding: 10px;
             border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
+            .student-item button {
+                padding: 5px 10px;
+                margin-left: 5px;
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+            }
+
+                .student-item button:first-of-type {
+                    background: #007bff;
+                    color: white;
+                }
+
+                .student-item button:last-of-type {
+                    background: #dc3545;
+                    color: white;
+                }
 
         .shareable-link {
             margin-top: 10px;
@@ -189,6 +210,24 @@
                 display: block;
             }
 
+        .link-url {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         .print-btn {
             display: block;
             margin: 20px auto;
@@ -198,6 +237,28 @@
             border: none;
             border-radius: 20px;
             cursor: pointer;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -314,7 +375,7 @@
                     <div class="subject-cell" id="totalExam">0</div>
                     <div class="subject-cell" id="totalClass">0</div>
                     <div class="subject-cell" id="grandTotal">0</div>
-                    <div class="subject-cell"></div> <!-- Empty for remarks alignment -->
+                    <div class="subject-cell"></div>
                 </div>
             </div>
         </div>
@@ -338,9 +399,6 @@
     </div>
 
     <script>
-        // In-memory store for shared data
-        const sharedDataStore = new Map();
-
         // Calculate totals and remarks
         function calculateTotals() {
             const examScores = document.querySelectorAll('.exam-score');
@@ -387,8 +445,19 @@
             document.getElementById('grandTotal').textContent = grandTotal.toFixed(1);
         }
 
-        // Students management
-        let savedStudents = JSON.parse(localStorage.getItem('savedStudents')) || [];
+        // Students management using localStorage
+        let savedStudents = [];
+
+        // Load saved students from localStorage
+        function loadSavedStudents() {
+            try {
+                const saved = localStorage.getItem('savedStudents');
+                savedStudents = saved ? JSON.parse(saved) : [];
+            } catch (error) {
+                console.error('Error loading saved students:', error);
+                savedStudents = [];
+            }
+        }
 
         // Clear form
         function clearForm() {
@@ -485,8 +554,8 @@
             }
         }
 
-        // Generate short shareable link
-        function generateShareableLink() {
+        // Generate shareable link using Netlify Functions
+        async function generateShareableLink() {
             const studentData = {
                 name: document.getElementById('studentName').value,
                 class: document.getElementById('studentClass').value,
@@ -516,20 +585,103 @@
                 });
             });
 
-            const shareKey = 's' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-            sharedDataStore.set(shareKey, studentData);
-            const shareableUrl = `${window.location.origin}${window.location.pathname}?view=${shareKey}`;
+            try {
+                const linkContainer = document.getElementById('shareableLink');
+                linkContainer.innerHTML = '<div class="loading">Generating link...</div>';
+                linkContainer.classList.add('active');
 
-            const linkContainer = document.getElementById('shareableLink');
-            linkContainer.innerHTML = `
+                console.log('Sending data:', studentData); // Debug log
+
+                const response = await fetch('/.netlify/functions/generate-link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(studentData)
+                });
+
+                console.log('Response status:', response.status); // Debug log
+
+                const result = await response.json();
+                console.log('Response data:', result); // Debug log
+
+                if (response.ok) {
+                    linkContainer.innerHTML = `
                         <h4>Shareable Link for ${studentData.name}</h4>
                         <p>Share this link with parents to view the report card online</p>
-                        <div class="link-url">${shareableUrl}</div>
-                        <button class="copy-btn" onclick="copyToClipboard('${shareableUrl}')">Copy Link</button>
+                        <div class="link-url">${result.url}</div>
+                        <button class="copy-btn" onclick="copyToClipboard('${result.url}')">Copy Link</button>
                     `;
-            linkContainer.classList.add('active');
+                } else {
+                    linkContainer.innerHTML = `<div class="error">Error: ${result.error}</div>`;
+                }
+            } catch (error) {
+                console.error('Error generating link:', error);
+                const linkContainer = document.getElementById('shareableLink');
+                linkContainer.innerHTML = `<div class="error">Failed to generate link: ${error.message}</div>`;
+            }
         }
 
+        // Load shared data from URL with better error handling
+        async function loadSharedData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+            const errorParam = urlParams.get('error');
+
+            if (errorParam === 'invalid_link') {
+                alert('Invalid or expired link!');
+                return;
+            }
+
+            if (key) {
+                try {
+                    console.log('Loading shared data for key:', key); // Debug log
+
+                    const response = await fetch(`/.netlify/functions/view-link?key=${key}&api=true`);
+                    console.log('Response status:', response.status); // Debug log
+
+                    const studentData = await response.json();
+                    console.log('Student data:', studentData); // Debug log
+
+                    if (response.ok) {
+                        document.getElementById('studentName').value = studentData.name || '';
+                        document.getElementById('studentClass').value = studentData.class || '';
+                        document.getElementById('session').value = studentData.session || '';
+                        document.getElementById('term').value = studentData.term || '';
+                        document.getElementById('position').value = studentData.position || '';
+                        document.getElementById('gender').value = studentData.gender || '';
+
+                        const examScores = document.querySelectorAll('.exam-score');
+                        const classScores = document.querySelectorAll('.class-score');
+
+                        if (studentData.scores && studentData.scores.length > 0) {
+                            studentData.scores.forEach((score, index) => {
+                                if (examScores[index]) examScores[index].value = score.examScore;
+                                if (classScores[index]) classScores[index].value = score.classScore;
+                            });
+                        }
+
+                        // Make form read-only for shared view
+                        document.querySelectorAll('input, select').forEach(input => {
+                            input.readOnly = true;
+                            input.disabled = true;
+                        });
+
+                        document.querySelector('.share-section').style.display = 'none';
+                        document.querySelector('.student-management').style.display = 'none';
+                        document.querySelector('.print-btn').style.display = 'block';
+                        document.querySelector('.header p').textContent = 'Shared Report Card';
+
+                        calculateTotals();
+                    } else {
+                        alert(studentData.error || 'Invalid or expired link!');
+                    }
+                } catch (error) {
+                    console.error('Error loading shared data:', error);
+                    alert('Failed to load shared report card: ' + error.message);
+                }
+            }
+        }
         // Copy link to clipboard
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
@@ -549,52 +701,61 @@
             }
 
             listContainer.innerHTML = savedStudents.map(student => `
-                        <div class="student-item">
-                            <span>${student.name} - ${student.class}</span>
-                            <button onclick="loadStudent(${student.id})">Load</button>
-                            <button onclick="deleteStudent(${student.id})">Delete</button>
-                        </div>
-                    `).join('');
+                <div class="student-item">
+                    <span>${student.name} - ${student.class}</span>
+                    <div>
+                        <button onclick="loadStudent(${student.id})">Load</button>
+                        <button onclick="deleteStudent(${student.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // Load shared data from URL
-        function loadSharedData() {
+        async function loadSharedData() {
             const urlParams = new URLSearchParams(window.location.search);
-            const viewKey = urlParams.get('view');
+            const key = urlParams.get('key');
 
-            if (viewKey) {
-                const studentData = sharedDataStore.get(viewKey);
-                if (!studentData) {
-                    alert('Invalid or expired link!');
-                    return;
+            if (key) {
+                try {
+                    const response = await fetch(`/.netlify/functions/view-link?key=${key}`);
+                    const studentData = await response.json();
+
+                    if (response.ok) {
+                        document.getElementById('studentName').value = studentData.name || '';
+                        document.getElementById('studentClass').value = studentData.class || '';
+                        document.getElementById('session').value = studentData.session || '';
+                        document.getElementById('term').value = studentData.term || '';
+                        document.getElementById('position').value = studentData.position || '';
+                        document.getElementById('gender').value = studentData.gender || '';
+
+                        const examScores = document.querySelectorAll('.exam-score');
+                        const classScores = document.querySelectorAll('.class-score');
+
+                        studentData.scores.forEach((score, index) => {
+                            if (examScores[index]) examScores[index].value = score.examScore;
+                            if (classScores[index]) classScores[index].value = score.classScore;
+                        });
+
+                        // Make form read-only for shared view
+                        document.querySelectorAll('input, select').forEach(input => {
+                            input.readOnly = true;
+                            input.disabled = true;
+                        });
+
+                        document.querySelector('.share-section').style.display = 'none';
+                        document.querySelector('.student-management').style.display = 'none';
+                        document.querySelector('.print-btn').style.display = 'block';
+                        document.querySelector('.header p').textContent = 'Shared Report Card';
+
+                        calculateTotals();
+                    } else {
+                        alert(studentData.error || 'Invalid or expired link!');
+                    }
+                } catch (error) {
+                    console.error('Error loading shared data:', error);
+                    alert('Failed to load shared report card!');
                 }
-
-                document.getElementById('studentName').value = studentData.name || '';
-                document.getElementById('studentClass').value = studentData.class || '';
-                document.getElementById('session').value = studentData.session || '';
-                document.getElementById('term').value = studentData.term || '';
-                document.getElementById('position').value = studentData.position || '';
-                document.getElementById('gender').value = studentData.gender || '';
-
-                const examScores = document.querySelectorAll('.exam-score');
-                const classScores = document.querySelectorAll('.class-score');
-
-                studentData.scores.forEach((score, index) => {
-                    if (examScores[index]) examScores[index].value = score.examScore;
-                    if (classScores[index]) classScores[index].value = score.classScore;
-                });
-
-                document.querySelectorAll('input, select').forEach(input => {
-                    input.readOnly = true;
-                    input.disabled = true;
-                });
-
-                document.querySelector('.share-section').style.display = 'none';
-                document.querySelector('.student-management').style.display = 'none';
-                document.querySelector('.print-btn').style.display = 'block';
-                document.querySelector('.header p').textContent = 'Shared Report Card';
-
-                calculateTotals();
             }
         }
 
@@ -604,6 +765,7 @@
         });
 
         // Initialize
+        loadSavedStudents();
         calculateTotals();
         loadSharedData();
         updateStudentsList();

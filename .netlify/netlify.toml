@@ -1,0 +1,30 @@
+functionsDirectory = "C:\\Users\\him\\Desktop\\firdaus-report-card\\functions"
+functionsDirectoryOrigin = "config-v1"
+plugins = []
+headers = []
+redirects = []
+
+[functions]
+
+[functions."*"]
+
+[build]
+publish = "C:\\Users\\him\\Desktop\\firdaus-report-card"
+publishOrigin = "config"
+commandOrigin = "config"
+command = "echo 'No build needed'"
+functions = "C:\\Users\\him\\Desktop\\firdaus-report-card\\functions"
+
+[build.environment]
+
+[build.processing]
+
+[build.processing.css]
+
+[build.processing.html]
+
+[build.processing.images]
+
+[build.processing.js]
+
+[build.services]

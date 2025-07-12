@@ -3,12 +3,15 @@ const path = require('path');
 
 exports.handler = async (event, context) => {
   try {
+    // Correct path to match your folder structure: functions/data/links.json
     const dataFilePath = path.join(__dirname, 'data', 'links.json');
     let links = {};
+    
     try {
       const fileContent = await fs.readFile(dataFilePath, 'utf8');
       links = JSON.parse(fileContent);
     } catch (error) {
+      // Create the file if it doesn't exist
       await fs.writeFile(dataFilePath, '{}', 'utf8');
     }
 
@@ -17,6 +20,10 @@ exports.handler = async (event, context) => {
     const studentData = {
       name: requestBody.name || 'Unknown',
       class: requestBody.class || 'Unknown',
+      session: requestBody.session || '',
+      term: requestBody.term || '',
+      position: requestBody.position || '',
+      gender: requestBody.gender || '',
       scores: requestBody.scores || [],
     };
 

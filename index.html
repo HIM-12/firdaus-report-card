@@ -1,0 +1,612 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firdaus Islamic School Report Card</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+            .header h1 {
+                font-size: 24px;
+                color: #333;
+            }
+
+            .header p {
+                font-size: 14px;
+                color: #666;
+            }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+            .form-group label {
+                font-weight: bold;
+                color: #333;
+                margin-bottom: 5px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+                font-size: 14px;
+            }
+
+        .grading-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+            .grading-info h4 {
+                color: #1976d2;
+                margin-bottom: 5px;
+            }
+
+        .grading-breakdown {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .grade-item {
+            background: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: #1976d2;
+            font-weight: bold;
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr; /* Adjusted for seven subjects with remarks */
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .subject-header,
+        .subject-cell {
+            background: #6b48ff;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .subject-name {
+            background: #f8f9fa;
+            color: #333;
+        }
+
+        .score-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .remarks-cell {
+            background: #f8f9fa;
+            color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .total-row {
+            font-weight: bold;
+        }
+
+        .student-management,
+        .share-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .management-buttons button,
+        .share-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .save-btn {
+            background: #28a745;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+        }
+
+        .share-btn {
+            background: #6b48ff;
+        }
+
+        .students-list {
+            margin-top: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .student-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .shareable-link {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+
+            .shareable-link.active {
+                display: block;
+            }
+
+        .print-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background: #6b48ff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>FIRDAUS ISLAMIC SCHOOL</h1>
+            <p>Academic Report Card</p>
+        </div>
+
+        <div class="form-section">
+            <div class="form-group">
+                <div>
+                    <label>Student Name</label>
+                    <input type="text" id="studentName" placeholder="Enter student name">
+                </div>
+                <div>
+                    <label>Class</label>
+                    <input type="text" id="studentClass" placeholder="Enter class">
+                </div>
+                <div>
+                    <label>Session</label>
+                    <input type="text" id="session" placeholder="e.g., 2024/2025">
+                </div>
+                <div>
+                    <label>Term | Chapter</label>
+                    <select id="term">
+                        <option value="">Select Term</option>
+                        <option value="First Term">First Term</option>
+                        <option value="Second Term">Second Term</option>
+                        <option value="Third Term">Third Term</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Position</label>
+                    <input type="text" id="position" placeholder="Enter position">
+                </div>
+                <div>
+                    <label>Gender</label>
+                    <select id="gender">
+                        <option value="">Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="subjects-section">
+                <h3>Academic Performance</h3>
+                <div class="grading-info">
+                    <h4>Grading System</h4>
+                    <div class="grading-breakdown">
+                        <div class="grade-item">Exam Score: 70%</div>
+                        <div class="grade-item">Class Score: 30% | Grade: 30%</div>
+                        <div class="grade-item">80-100: Excellent</div>
+                        <div class="grade-item">60-79: Very Good</div>
+                        <div class="grade-item">40-59: Good</div>
+                        <div class="grade-item">Below 40: Requires More Practice</div>
+                    </div>
+                </div>
+
+                <div class="subjects-grid">
+                    <div class="subject-header">SUBJECT | The article</div>
+                    <div class="subject-header">EXAM (70%) | Exam</div>
+                    <div class="subject-header">CLASS (30%) | Class</div>
+                    <div class="subject-header">TOTAL</div>
+                    <div class="subject-header">REMARKS</div>
+
+                    <div class="subject-cell subject-name">AZKAR | Remembrances</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-azkar"></div>
+
+                    <div class="subject-cell subject-name">QURAN | Quran</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-quran"></div>
+
+                    <div class="subject-cell subject-name">HADITH | Hadith</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-hadith"></div>
+
+                    <div class="subject-cell subject-name">ALPHABET | The Alphabet</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-alphabet"></div>
+
+                    <div class="subject-cell subject-name">ARABIC LANGUAGE | Arabic</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-arabic"></div>
+
+                    <div class="subject-cell subject-name">DICTATION | Dictation</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-dictation"></div>
+
+                    <div class="subject-cell subject-name">WRITING | Writing</div>
+                    <input type="number" class="score-input exam-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input class-score" min="0" max="100" placeholder="0">
+                    <input type="number" class="score-input total-score" readonly>
+                    <div class="remarks-cell" id="remark-writing"></div>
+                </div>
+
+                <div class="subjects-grid total-row">
+                    <div class="subject-cell">OVERALL TOTAL</div>
+                    <div class="subject-cell" id="totalExam">0</div>
+                    <div class="subject-cell" id="totalClass">0</div>
+                    <div class="subject-cell" id="grandTotal">0</div>
+                    <div class="subject-cell"></div> <!-- Empty for remarks alignment -->
+                </div>
+            </div>
+        </div>
+
+        <div class="student-management">
+            <div class="management-buttons">
+                <button class="clear-btn" onclick="clearForm()">Clear Form</button>
+                <button class="save-btn" onclick="saveStudent()">Save Student</button>
+            </div>
+            <div class="saved-students">
+                <div id="studentsList" class="students-list"></div>
+            </div>
+        </div>
+
+        <div class="share-section">
+            <button class="share-btn" onclick="generateShareableLink()">Generate Shareable Link</button>
+            <div id="shareableLink" class="shareable-link"></div>
+        </div>
+
+        <button class="print-btn" onclick="window.print()">Print Report Card</button>
+    </div>
+
+    <script>
+        // In-memory store for shared data
+        const sharedDataStore = new Map();
+
+        // Calculate totals and remarks
+        function calculateTotals() {
+            const examScores = document.querySelectorAll('.exam-score');
+            const classScores = document.querySelectorAll('.class-score');
+            const totalScores = document.querySelectorAll('.total-score');
+            const remarksElements = {
+                'azkar': document.getElementById('remark-azkar'),
+                'quran': document.getElementById('remark-quran'),
+                'hadith': document.getElementById('remark-hadith'),
+                'alphabet': document.getElementById('remark-alphabet'),
+                'arabic': document.getElementById('remark-arabic'),
+                'dictation': document.getElementById('remark-dictation'),
+                'writing': document.getElementById('remark-writing')
+            };
+
+            let totalExam = 0;
+            let totalClass = 0;
+            let grandTotal = 0;
+
+            examScores.forEach((examInput, index) => {
+                const examScore = parseFloat(examInput.value) || 0;
+                const classScore = parseFloat(classScores[index].value) || 0;
+                const subjects = ['azkar', 'quran', 'hadith', 'alphabet', 'arabic', 'dictation', 'writing'];
+                const subject = subjects[index];
+
+                const subjectTotal = (examScore * 0.7) + (classScore * 0.3);
+                totalScores[index].value = subjectTotal.toFixed(1);
+
+                // Automatically set remark
+                let remark = '';
+                if (subjectTotal >= 80) remark = 'Excellent';
+                else if (subjectTotal >= 60) remark = 'Very Good';
+                else if (subjectTotal >= 40) remark = 'Good';
+                else remark = 'Requires More Practice';
+                remarksElements[subject].textContent = remark;
+
+                totalExam += examScore;
+                totalClass += classScore;
+                grandTotal += subjectTotal;
+            });
+
+            document.getElementById('totalExam').textContent = totalExam.toFixed(1);
+            document.getElementById('totalClass').textContent = totalClass.toFixed(1);
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(1);
+        }
+
+        // Students management
+        let savedStudents = JSON.parse(localStorage.getItem('savedStudents')) || [];
+
+        // Clear form
+        function clearForm() {
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentClass').value = '';
+            document.getElementById('session').value = '';
+            document.getElementById('term').value = '';
+            document.getElementById('position').value = '';
+            document.getElementById('gender').value = '';
+            document.querySelectorAll('.exam-score, .class-score, .total-score').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.remarks-cell').forEach(cell => {
+                cell.textContent = '';
+            });
+            calculateTotals();
+            document.getElementById('shareableLink').classList.remove('active');
+        }
+
+        // Save current student
+        function saveStudent() {
+            const studentData = {
+                id: Date.now(),
+                name: document.getElementById('studentName').value,
+                class: document.getElementById('studentClass').value,
+                session: document.getElementById('session').value,
+                term: document.getElementById('term').value,
+                position: document.getElementById('position').value,
+                gender: document.getElementById('gender').value,
+                scores: []
+            };
+
+            if (!studentData.name) {
+                alert('Please enter student name before saving!');
+                return;
+            }
+
+            const examScores = document.querySelectorAll('.exam-score');
+            const classScores = document.querySelectorAll('.class-score');
+            const totalScores = document.querySelectorAll('.total-score');
+            const subjects = ['azkar', 'quran', 'hadith', 'alphabet', 'arabic', 'dictation', 'writing'];
+
+            subjects.forEach((subject, index) => {
+                studentData.scores.push({
+                    subject: subject,
+                    examScore: examScores[index].value || 0,
+                    classScore: classScores[index].value || 0,
+                    totalScore: totalScores[index].value || 0
+                });
+            });
+
+            const existingIndex = savedStudents.findIndex(s => s.name === studentData.name && s.class === studentData.class);
+            if (existingIndex !== -1) {
+                savedStudents[existingIndex] = studentData;
+            } else {
+                savedStudents.push(studentData);
+            }
+
+            localStorage.setItem('savedStudents', JSON.stringify(savedStudents));
+            updateStudentsList();
+            alert('Student saved successfully!');
+        }
+
+        // Load student data
+        function loadStudent(studentId) {
+            const student = savedStudents.find(s => s.id === studentId);
+            if (!student) return;
+
+            document.getElementById('studentName').value = student.name;
+            document.getElementById('studentClass').value = student.class;
+            document.getElementById('session').value = student.session;
+            document.getElementById('term').value = student.term;
+            document.getElementById('position').value = student.position;
+            document.getElementById('gender').value = student.gender;
+
+            const examScores = document.querySelectorAll('.exam-score');
+            const classScores = document.querySelectorAll('.class-score');
+
+            student.scores.forEach((score, index) => {
+                if (examScores[index]) examScores[index].value = score.examScore;
+                if (classScores[index]) classScores[index].value = score.classScore;
+            });
+
+            calculateTotals();
+            document.getElementById('shareableLink').classList.remove('active');
+        }
+
+        // Delete student
+        function deleteStudent(studentId) {
+            if (confirm('Are you sure you want to delete this student?')) {
+                savedStudents = savedStudents.filter(s => s.id !== studentId);
+                localStorage.setItem('savedStudents', JSON.stringify(savedStudents));
+                updateStudentsList();
+            }
+        }
+
+        // Generate short shareable link
+        function generateShareableLink() {
+            const studentData = {
+                name: document.getElementById('studentName').value,
+                class: document.getElementById('studentClass').value,
+                session: document.getElementById('session').value,
+                term: document.getElementById('term').value,
+                position: document.getElementById('position').value,
+                gender: document.getElementById('gender').value,
+                scores: []
+            };
+
+            if (!studentData.name) {
+                alert('Please enter student name before generating link!');
+                return;
+            }
+
+            const examScores = document.querySelectorAll('.exam-score');
+            const classScores = document.querySelectorAll('.class-score');
+            const totalScores = document.querySelectorAll('.total-score');
+            const subjects = ['azkar', 'quran', 'hadith', 'alphabet', 'arabic', 'dictation', 'writing'];
+
+            subjects.forEach((subject, index) => {
+                studentData.scores.push({
+                    subject: subject,
+                    examScore: examScores[index].value || 0,
+                    classScore: classScores[index].value || 0,
+                    totalScore: totalScores[index].value || 0
+                });
+            });
+
+            const shareKey = 's' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            sharedDataStore.set(shareKey, studentData);
+            const shareableUrl = `${window.location.origin}${window.location.pathname}?view=${shareKey}`;
+
+            const linkContainer = document.getElementById('shareableLink');
+            linkContainer.innerHTML = `
+                        <h4>Shareable Link for ${studentData.name}</h4>
+                        <p>Share this link with parents to view the report card online</p>
+                        <div class="link-url">${shareableUrl}</div>
+                        <button class="copy-btn" onclick="copyToClipboard('${shareableUrl}')">Copy Link</button>
+                    `;
+            linkContainer.classList.add('active');
+        }
+
+        // Copy link to clipboard
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Link copied to clipboard!');
+            }).catch(err => {
+                alert('Failed to copy link!');
+                console.error('Copy error:', err);
+            });
+        }
+
+        // Update students list display
+        function updateStudentsList() {
+            const listContainer = document.getElementById('studentsList');
+            if (savedStudents.length === 0) {
+                listContainer.innerHTML = '<p style="text-align: center; color: #666;">No students saved yet</p>';
+                return;
+            }
+
+            listContainer.innerHTML = savedStudents.map(student => `
+                        <div class="student-item">
+                            <span>${student.name} - ${student.class}</span>
+                            <button onclick="loadStudent(${student.id})">Load</button>
+                            <button onclick="deleteStudent(${student.id})">Delete</button>
+                        </div>
+                    `).join('');
+        }
+
+        // Load shared data from URL
+        function loadSharedData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewKey = urlParams.get('view');
+
+            if (viewKey) {
+                const studentData = sharedDataStore.get(viewKey);
+                if (!studentData) {
+                    alert('Invalid or expired link!');
+                    return;
+                }
+
+                document.getElementById('studentName').value = studentData.name || '';
+                document.getElementById('studentClass').value = studentData.class || '';
+                document.getElementById('session').value = studentData.session || '';
+                document.getElementById('term').value = studentData.term || '';
+                document.getElementById('position').value = studentData.position || '';
+                document.getElementById('gender').value = studentData.gender || '';
+
+                const examScores = document.querySelectorAll('.exam-score');
+                const classScores = document.querySelectorAll('.class-score');
+
+                studentData.scores.forEach((score, index) => {
+                    if (examScores[index]) examScores[index].value = score.examScore;
+                    if (classScores[index]) classScores[index].value = score.classScore;
+                });
+
+                document.querySelectorAll('input, select').forEach(input => {
+                    input.readOnly = true;
+                    input.disabled = true;
+                });
+
+                document.querySelector('.share-section').style.display = 'none';
+                document.querySelector('.student-management').style.display = 'none';
+                document.querySelector('.print-btn').style.display = 'block';
+                document.querySelector('.header p').textContent = 'Shared Report Card';
+
+                calculateTotals();
+            }
+        }
+
+        // Add event listeners
+        document.querySelectorAll('.exam-score, .class-score').forEach(input => {
+            input.addEventListener('input', calculateTotals);
+        });
+
+        // Initialize
+        calculateTotals();
+        loadSharedData();
+        updateStudentsList();
+    </script>
+</body>
+</html>

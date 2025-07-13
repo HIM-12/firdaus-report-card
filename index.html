@@ -260,6 +260,17 @@
             border-radius: 5px;
             margin: 10px 0;
         }
+
+        @media print {
+            .final-result {
+                font-weight: bold;
+                color: #2e7d32; /* Green for promoted */
+            }
+
+                .final-result.repeated {
+                    color: #c62828; /* Red for repeated */
+                }
+        }
     </style>
 </head>
 <body>
@@ -295,6 +306,16 @@
                 <div>
                     <label>Position</label>
                     <input type="text" id="position" placeholder="Enter position">
+                </div>
+                <div class="form-group">
+                    <div>
+                        <label>Final Result</label>
+                        <select id="finalResult">
+                            <option value="">Select Status</option>
+                            <option value="Promoted">Promoted</option>
+                            <option value="Repeated">Repeated</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label>Gender</label>
@@ -488,6 +509,8 @@
                 position: document.getElementById('position').value,
                 gender: document.getElementById('gender').value,
                 scores: []
+
+                finalResult: document.getElementById('finalResult').value,
             };
 
             if (!studentData.name) {
@@ -533,6 +556,9 @@
             document.getElementById('position').value = student.position;
             document.getElementById('gender').value = student.gender;
 
+            if (studentData.finalResult) {
+                document.getElementById('finalResult').value = studentData.finalResult;
+
             const examScores = document.querySelectorAll('.exam-score');
             const classScores = document.querySelectorAll('.class-score');
 
@@ -542,7 +568,9 @@
             });
 
             calculateTotals();
-            document.getElementById('shareableLink').classList.remove('active');
+                document.getElementById('shareableLink').classList.remove('active');
+
+                const savedStudents = JSON.parse(localStorage.getItem('savedStudents')) || [];
         }
 
         // Delete student

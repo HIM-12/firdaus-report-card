@@ -1,63 +1,48 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-exports.handler = async (event, context) => {
+exports.handler = async (event) => {
   try {
-    const { key, api } = event.queryStringParameters || {};
+    const { key } = event.queryStringParameters || {};
     if (!key) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: 'Key is required' }),
-        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Missing key parameter' }),
       };
     }
 
-    // Correct path to match your folder structure: functions/data/links.json
-    const dataFilePath = path.join(__dirname, 'data', 'links.json');
-    const fileContent = await fs.readFile(dataFilePath, 'utf8');
-    const links = JSON.parse(fileContent);
+    const dataFilePath = path.join(process.cwd(), 'functions', 'data', 'links.json');
 
+    // Read links data
+    let links = {};
+    try {
+      const fileContent = await fs.readFile(dataFilePath, 'utf8');
+      links = JSON.parse(fileContent);
+    } catch (err) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Link database not found' }),
+      };
+    }
+
+    // Find the student data
     const studentData = links[key];
     if (!studentData) {
-      // If API call, return error JSON
-      if (api === 'true') {
-        return {
-          statusCode: 404,
-          body: JSON.stringify({ error: 'Invalid or expired link!' }),
-          headers: { 'Content-Type': 'application/json' },
-        };
-      }
-      // If direct access, redirect to main page with error
       return {
-        statusCode: 302,
-        headers: {
-          Location: `/?error=invalid_link`,
-        },
+        statusCode: 404,
+        body: JSON.stringify({ error: 'Invalid or expired link' }),
       };
     }
 
-    // If API call, return JSON data
-    if (api === 'true') {
-      return {
-        statusCode: 200,
-        body: JSON.stringify(studentData),
-        headers: { 'Content-Type': 'application/json' },
-      };
-    }
-
-    // If direct access, redirect to main page with key parameter
+    // Return the data
     return {
-      statusCode: 302,
-      headers: {
-        Location: `/?key=${key}`,
-      },
+      statusCode: 200,
+      body: JSON.stringify(studentData),
     };
   } catch (error) {
-    console.error('Error retrieving link:', error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Failed to retrieve link' }),
-      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: 'Server error' }),
     };
   }
 };

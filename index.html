@@ -555,7 +555,8 @@
         }
 
         // Generate shareable link using Netlify Functions
-        function generateShareableLink() {
+        async function generateShareableLink() {
+            // Collect all student data
             const studentData = {
                 name: document.getElementById('studentName').value,
                 class: document.getElementById('studentClass').value,
@@ -566,38 +567,95 @@
                 scores: []
             };
 
-            const examScores = document.querySelectorAll('.exam-score');
-            const classScores = document.querySelectorAll('.class-score');
+            // Collect all subject scores
             const subjects = ['azkar', 'quran', 'hadith', 'alphabet', 'arabic', 'dictation', 'writing'];
-
             subjects.forEach((subject, index) => {
                 studentData.scores.push({
                     subject: subject,
-                    examScore: examScores[index].value || 0,
-                    classScore: classScores[index].value || 0
+                    examScore: document.querySelectorAll('.exam-score')[index].value || 0,
+                    classScore: document.querySelectorAll('.class-score')[index].value || 0,
+                    totalScore: document.querySelectorAll('.total-score')[index].value || 0
                 });
             });
 
-            fetch('/.netlify/functions/generate-link', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(studentData)
-            })
-                .then(response => response.json())
-                .then(data => {
-                    const linkContainer = document.getElementById('shareableLink');
-                    linkContainer.innerHTML = `
+            try {
+                const response = await fetch('/.netlify/functions/generate-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(studentData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate link');
+                }
+
+                const data = await response.json();
+                if (!data.url) {
+                    throw new Error('No URL returned');
+                }
+
+                // Display the link
+                const linkContainer = document.getElementById('shareableLink');
+                linkContainer.innerHTML = `
       <h4>Shareable Link for ${studentData.name}</h4>
       <div class="link-url">${data.url}</div>
       <button class="copy-btn" onclick="copyToClipboard('${data.url}')">Copy Link</button>
-      <p><a href="${data.url}" target="_blank">Open in new tab</a></p>
+      <p><a href="${data.url}" target="_blank" style="color: #6b48ff;">Test Link Now</a></p>
     `;
-                    linkContainer.classList.add('active');
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Failed to generate link: ' + error.message);
+                linkContainer.classList.add('active');
+            } catch (error) {
+                console.error('Error generating link:', error);
+                alert('Error generating link: ' + error.message);
+            }
+        }
+
+        async function loadSharedData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const key = urlParams.get('key');
+
+            if (!key) return;
+
+            try {
+                const response = await fetch(`/.netlify/functions/view-link?key=${key}`);
+                if (!response.ok) {
+                    throw new Error('Link is invalid or expired');
+                }
+
+                const studentData = await response.json();
+
+                // Populate the form
+                document.getElementById('studentName').value = studentData.name || '';
+                document.getElementById('studentClass').value = studentData.class || '';
+                document.getElementById('session').value = studentData.session || '';
+                document.getElementById('term').value = studentData.term || '';
+                document.getElementById('position').value = studentData.position || '';
+                document.getElementById('gender').value = studentData.gender || '';
+
+                // Populate scores
+                studentData.scores.forEach((score, index) => {
+                    const examInputs = document.querySelectorAll('.exam-score');
+                    const classInputs = document.querySelectorAll('.class-score');
+                    if (examInputs[index]) examInputs[index].value = score.examScore;
+                    if (classInputs[index]) classInputs[index].value = score.classScore;
                 });
+
+                // Make form read-only
+                document.querySelectorAll('input, select').forEach(el => {
+                    el.readOnly = true;
+                    el.disabled = true;
+                });
+
+                // Hide management sections
+                document.querySelector('.share-section').style.display = 'none';
+                document.querySelector('.student-management').style.display = 'none';
+                document.querySelector('.print-btn').style.display = 'block';
+                document.querySelector('.header p').textContent = 'Shared Report Card';
+
+                calculateTotals();
+            } catch (error) {
+                console.error('Error loading shared data:', error);
+                alert(error.message);
+            }
         }
 
         // Load shared data from URL with better error handling

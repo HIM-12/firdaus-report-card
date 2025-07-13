@@ -264,12 +264,16 @@
         @media print {
             .final-result {
                 font-weight: bold;
-                color: #2e7d32; /* Green for promoted */
+                color: #2e7d32;
             }
 
                 .final-result.repeated {
-                    color: #c62828; /* Red for repeated */
+                    color: #c62828;
                 }
+
+            button {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -307,22 +311,20 @@
                     <label>Position</label>
                     <input type="text" id="position" placeholder="Enter position">
                 </div>
-                <div class="form-group">
-                    <div>
-                        <label>Final Result</label>
-                        <select id="finalResult">
-                            <option value="">Select Status</option>
-                            <option value="Promoted">Promoted</option>
-                            <option value="Repeated">Repeated</option>
-                        </select>
-                    </div>
-                </div>
                 <div>
                     <label>Gender</label>
                     <select id="gender">
                         <option value="">Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Final Result</label>
+                    <select id="finalResult">
+                        <option value="">Select Status</option>
+                        <option value="Promoted">Promoted</option>
+                        <option value="Repeated">Repeated</option>
                     </select>
                 </div>
             </div>
@@ -488,6 +490,7 @@
             document.getElementById('term').value = '';
             document.getElementById('position').value = '';
             document.getElementById('gender').value = '';
+            document.getElementById('finalResult').value = '';
             document.querySelectorAll('.exam-score, .class-score, .total-score').forEach(input => {
                 input.value = '';
             });
@@ -508,19 +511,17 @@
                 term: document.getElementById('term').value,
                 position: document.getElementById('position').value,
                 gender: document.getElementById('gender').value,
-                scores: []
-
                 finalResult: document.getElementById('finalResult').value,
+                scores: []
             };
 
-            if (!studentData.name) {
-                alert('Please enter student name before saving!');
+            if (!studentData.name || !studentData.finalResult) {
+                alert('Please enter student name and select promotion status!');
                 return;
             }
 
             const examScores = document.querySelectorAll('.exam-score');
             const classScores = document.querySelectorAll('.class-score');
-            const totalScores = document.querySelectorAll('.total-score');
             const subjects = ['azkar', 'quran', 'hadith', 'alphabet', 'arabic', 'dictation', 'writing'];
 
             subjects.forEach((subject, index) => {
@@ -528,7 +529,7 @@
                     subject: subject,
                     examScore: examScores[index].value || 0,
                     classScore: classScores[index].value || 0,
-                    totalScore: totalScores[index].value || 0
+                    totalScore: document.querySelectorAll('.total-score')[index].value || 0
                 });
             });
 
@@ -555,9 +556,7 @@
             document.getElementById('term').value = student.term;
             document.getElementById('position').value = student.position;
             document.getElementById('gender').value = student.gender;
-
-            if (studentData.finalResult) {
-                document.getElementById('finalResult').value = studentData.finalResult;
+            document.getElementById('finalResult').value = student.finalResult || '';
 
             const examScores = document.querySelectorAll('.exam-score');
             const classScores = document.querySelectorAll('.class-score');
@@ -568,9 +567,7 @@
             });
 
             calculateTotals();
-                document.getElementById('shareableLink').classList.remove('active');
-
-                const savedStudents = JSON.parse(localStorage.getItem('savedStudents')) || [];
+            document.getElementById('shareableLink').classList.remove('active');
         }
 
         // Delete student
@@ -584,7 +581,6 @@
 
         // Generate shareable link using Netlify Functions
         async function generateShareableLink() {
-            // Collect all student data
             const studentData = {
                 name: document.getElementById('studentName').value,
                 class: document.getElementById('studentClass').value,
@@ -592,10 +588,15 @@
                 term: document.getElementById('term').value,
                 position: document.getElementById('position').value,
                 gender: document.getElementById('gender').value,
+                finalResult: document.getElementById('finalResult').value,
                 scores: []
             };
 
-            // Collect all subject scores
+            if (!studentData.name) {
+                alert('Please enter student name before generating link!');
+                return;
+            }
+
             const subjects = ['azkar', 'quran', 'hadith', 'alphabet', 'arabic', 'dictation', 'writing'];
             subjects.forEach((subject, index) => {
                 studentData.scores.push({
@@ -613,23 +614,16 @@
                     body: JSON.stringify(studentData)
                 });
 
-                if (!response.ok) {
-                    throw new Error('Failed to generate link');
-                }
+                if (!response.ok) throw new Error('Failed to generate link');
 
                 const data = await response.json();
-                if (!data.url) {
-                    throw new Error('No URL returned');
-                }
-
-                // Display the link
                 const linkContainer = document.getElementById('shareableLink');
                 linkContainer.innerHTML = `
-      <h4>Shareable Link for ${studentData.name}</h4>
-      <div class="link-url">${data.url}</div>
-      <button class="copy-btn" onclick="copyToClipboard('${data.url}')">Copy Link</button>
-      <p><a href="${data.url}" target="_blank" style="color: #6b48ff;">Test Link Now</a></p>
-    `;
+                        <h4>Shareable Link for ${studentData.name}</h4>
+                        <div class="link-url">${data.url}</div>
+                        <button class="copy-btn" onclick="copyToClipboard('${data.url}')">Copy Link</button>
+                        <p><a href="${data.url}" target="_blank" style="color: #6b48ff;">Test Link Now</a></p>
+                    `;
                 linkContainer.classList.add('active');
             } catch (error) {
                 console.error('Error generating link:', error);
@@ -637,56 +631,7 @@
             }
         }
 
-        async function loadSharedData() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const key = urlParams.get('key');
-
-            if (!key) return;
-
-            try {
-                const response = await fetch(`/.netlify/functions/view-link?key=${key}`);
-                if (!response.ok) {
-                    throw new Error('Link is invalid or expired');
-                }
-
-                const studentData = await response.json();
-
-                // Populate the form
-                document.getElementById('studentName').value = studentData.name || '';
-                document.getElementById('studentClass').value = studentData.class || '';
-                document.getElementById('session').value = studentData.session || '';
-                document.getElementById('term').value = studentData.term || '';
-                document.getElementById('position').value = studentData.position || '';
-                document.getElementById('gender').value = studentData.gender || '';
-
-                // Populate scores
-                studentData.scores.forEach((score, index) => {
-                    const examInputs = document.querySelectorAll('.exam-score');
-                    const classInputs = document.querySelectorAll('.class-score');
-                    if (examInputs[index]) examInputs[index].value = score.examScore;
-                    if (classInputs[index]) classInputs[index].value = score.classScore;
-                });
-
-                // Make form read-only
-                document.querySelectorAll('input, select').forEach(el => {
-                    el.readOnly = true;
-                    el.disabled = true;
-                });
-
-                // Hide management sections
-                document.querySelector('.share-section').style.display = 'none';
-                document.querySelector('.student-management').style.display = 'none';
-                document.querySelector('.print-btn').style.display = 'block';
-                document.querySelector('.header p').textContent = 'Shared Report Card';
-
-                calculateTotals();
-            } catch (error) {
-                console.error('Error loading shared data:', error);
-                alert(error.message);
-            }
-        }
-
-        // Load shared data from URL with better error handling
+        // Load shared data from URL
         async function loadSharedData() {
             const urlParams = new URLSearchParams(window.location.search);
             const key = urlParams.get('key');
@@ -699,13 +644,8 @@
 
             if (key) {
                 try {
-                    console.log('Loading shared data for key:', key); // Debug log
-
                     const response = await fetch(`/.netlify/functions/view-link?key=${key}&api=true`);
-                    console.log('Response status:', response.status); // Debug log
-
                     const studentData = await response.json();
-                    console.log('Student data:', studentData); // Debug log
 
                     if (response.ok) {
                         document.getElementById('studentName').value = studentData.name || '';
@@ -714,6 +654,7 @@
                         document.getElementById('term').value = studentData.term || '';
                         document.getElementById('position').value = studentData.position || '';
                         document.getElementById('gender').value = studentData.gender || '';
+                        document.getElementById('finalResult').value = studentData.finalResult || '';
 
                         const examScores = document.querySelectorAll('.exam-score');
                         const classScores = document.querySelectorAll('.class-score');
@@ -746,6 +687,7 @@
                 }
             }
         }
+
         // Copy link to clipboard
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
@@ -765,17 +707,15 @@
             }
 
             listContainer.innerHTML = savedStudents.map(student => `
-                <div class="student-item">
-                    <span>${student.name} - ${student.class}</span>
-                    <div>
-                        <button onclick="loadStudent(${student.id})">Load</button>
-                        <button onclick="deleteStudent(${student.id})">Delete</button>
+                    <div class="student-item">
+                        <span>${student.name} - ${student.class}</span>
+                        <div>
+                            <button onclick="loadStudent(${student.id})">Load</button>
+                            <button onclick="deleteStudent(${student.id})">Delete</button>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `).join('');
         }
-
-        
 
         // Add event listeners
         document.querySelectorAll('.exam-score, .class-score').forEach(input => {

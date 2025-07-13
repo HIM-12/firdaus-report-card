@@ -3,50 +3,74 @@ const path = require('path');
 
 exports.handler = async (event) => {
   try {
-    // Ensure data directory exists
+    console.log("Function started");
+    
+    // Get the correct path (works both locally and on Netlify)
     const dataDir = path.join(process.cwd(), 'functions', 'data');
+    const dataFilePath = path.join(dataDir, 'links.json');
+    
+    console.log(`Data file path: ${dataFilePath}`);
+
+    // Ensure directory exists
     try {
       await fs.mkdir(dataDir, { recursive: true });
+      console.log("Directory created/verified");
     } catch (err) {
+      console.error("Directory error:", err);
       if (err.code !== 'EEXIST') throw err;
     }
 
-    const dataFilePath = path.join(dataDir, 'links.json');
+    // Initialize links object
     let links = {};
-
-    // Try to read existing links
+    
+    // Try to read existing file
     try {
       const fileContent = await fs.readFile(dataFilePath, 'utf8');
       links = JSON.parse(fileContent);
+      console.log("Existing links loaded");
     } catch (err) {
-      // File doesn't exist yet - that's okay
+      if (err.code === 'ENOENT') {
+        console.log("No existing links file, creating new one");
+      } else {
+        throw err;
+      }
     }
 
     // Generate unique key
-    const key = `link_${Date.now()}_${Math.random().toString(36).substr(2, 8)}`;
+    const key = `link_${Date.now()}`;
+    console.log(`Generated key: ${key}`);
 
-    // Parse and validate input
+    // Parse input data
     const studentData = JSON.parse(event.body);
-    if (!studentData.name) {
+    console.log("Received student data:", studentData);
+
+    // Validate required fields
+    if (!studentData?.name) {
       throw new Error("Student name is required");
     }
 
     // Store the data
     links[key] = studentData;
-    await fs.writeFile(dataFilePath, JSON.stringify(links));
+    await fs.writeFile(dataFilePath, JSON.stringify(links, null, 2));
+    console.log("Data saved successfully");
 
     // Generate URL
-    const siteUrl = process.env.URL || 'https://your-site-name.netlify.app';
+    const siteUrl = process.env.URL || 'https://resplendent-faun-4d1839.netlify.app';
     const shareUrl = `${siteUrl}/?key=${key}`;
+    console.log(`Generated URL: ${shareUrl}`);
 
     return {
       statusCode: 200,
       body: JSON.stringify({ url: shareUrl }),
     };
   } catch (error) {
+    console.error("Full error:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ 
+        error: error.message,
+        stack: error.stack 
+      }),
     };
   }
 };
